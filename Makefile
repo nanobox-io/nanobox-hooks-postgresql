@@ -20,4 +20,11 @@ all: ${FOLDERS}
 
 install: all
 	cp -r bin ${DESTDIR}${PREFIX}
-	cp -r hookit ${DESTDIR}${PREFIX}
+	mkdir -p ${DESTDIR}${PREFIX}/hookit
+	cp -r hookit ${DESTDIR}${PREFIX}/hookit/mod
+
+.PHONY: test
+
+test:
+	test/run_all.sh 9.3
+	test/run_all.sh 9.4
