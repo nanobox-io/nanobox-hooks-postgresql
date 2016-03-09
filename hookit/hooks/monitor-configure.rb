@@ -2,7 +2,7 @@
 include Hooky::Postgresql
 
 # Setup
-boxfile = converge( BOXFILE_DEFAULTS, payload[:boxfile] )
+# boxfile = converge( BOXFILE_DEFAULTS, payload[:boxfile] )
 
 # Setup root keys for data migrations
 directory '/root/.ssh' do
