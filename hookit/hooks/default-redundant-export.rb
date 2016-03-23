@@ -1,5 +1,5 @@
 
-payload[:generation][:members].each do |member|
+payload:[:members].each do |member|
 
   if member[:type] == 'default'
 

@@ -1,0 +1,276 @@
+#!/usr/bin/env ruby
+
+# hookit is installed as a bundled app, so we need bundler to load it for us
+$:.unshift  '/opt/gonano/hookit/vendor/bundle'
+require 'bundler/setup'
+
+# load hookit/setup to bootstrap hookit and import the dsl
+require 'hookit/setup'
+
+include Hooky::Postgresql
+
+if payload[:platform] == 'local'  
+  memcap = 128
+  user   = 'nanobox'
+else
+  total_mem = `vmstat -s | grep 'total memory' | awk '{print $1}'`.to_i
+  cgroup_mem = `cat /sys/fs/cgroup/memory/memory.limit_in_bytes`.to_i
+  memcap = [ total_mem / 1024, cgroup_mem / 1024 / 1024 ].min
+end
+
+# Setup
+boxfile = converge( BOXFILE_DEFAULTS, payload[:boxfile] )
+
+if payload[:platform] != 'local'
+
+  # Setup root keys for data migrations
+  directory '/root/.ssh' do
+    recursive true
+  end
+
+  file '/root/.ssh/id_rsa' do
+    content payload[:ssh][:admin_key][:private_key]
+    mode 0600
+  end
+
+  file '/root/.ssh/id_rsa.pub' do
+    content payload[:ssh][:admin_key][:public_key]
+  end
+
+  file '/root/.ssh/authorized_keys' do
+    content payload[:ssh][:admin_key][:public_key]
+  end
+
+  directory '/home/gonano/.ssh' do
+    recursive true
+    group "gonano"
+    owner "gonano"
+  end
+
+  file '/home/gonano/.ssh/id_rsa' do
+    content payload[:ssh][:admin_key][:private_key]
+    mode 0600
+    group "gonano"
+    owner "gonano"
+  end
+
+  file '/home/gonano/.ssh/id_rsa.pub' do
+    content payload[:ssh][:admin_key][:public_key]
+    group "gonano"
+    owner "gonano"
+  end
+
+  file '/home/gonano/.ssh/authorized_keys' do
+    content payload[:ssh][:admin_key][:public_key]
+    group "gonano"
+    owner "gonano"
+  end
+
+  # Create some ssh host keys
+  execute "ssh-keygen -f /opt/gonano/etc/ssh/ssh_host_rsa_key -N '' -t rsa" do
+    not_if { ::File.exists? '/opt/gonano/etc/ssh/ssh_host_rsa_key' }
+  end
+
+  execute "ssh-keygen -f /opt/gonano/etc/ssh/ssh_host_dsa_key -N '' -t dsa" do
+    not_if { ::File.exists? '/opt/gonano/etc/ssh/ssh_host_dsa_key' }
+  end
+
+  execute "ssh-keygen -f /opt/gonano/etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa" do
+    not_if { ::File.exists? '/opt/gonano/etc/ssh/ssh_host_ecdsa_key' }
+  end
+
+  execute "ssh-keygen -f /opt/gonano/etc/ssh/ssh_host_ed25519_key -N '' -t ed25519" do
+    not_if { ::File.exists? '/opt/gonano/etc/ssh/ssh_host_ed25519_key' }
+  end
+end
+
+if ["primary", "secondary", "default"].include? payload[:member][:role]
+  execute 'generate locale' do
+    command "locale-gen #{boxfile[:locale]} && update-locale"
+  end
+
+  directory '/data/var/db/postgresql' do
+    recursive true
+  end
+
+  # chown data/var/db/postgresql for gonano
+  execute 'chown /data/var/db/postgresql' do
+    command 'chown -R gonano:gonano /data/var/db/postgresql'
+  end
+
+  directory '/var/log/pgsql' do
+    owner 'gonano'
+    group 'gonano'
+  end
+
+  file '/var/log/pgsql/pgsql.log' do
+    owner 'gonano'
+    group 'gonano'
+  end
+
+  execute 'rm -rf /var/pgsql'
+
+  execute '/data/bin/initdb -E UTF8 /data/var/db/postgresql' do
+    user 'gonano'
+    not_if { ::Dir.exists? '/data/var/db/postgresql/base' }
+  end
+
+  template '/data/var/db/postgresql/postgresql.conf' do
+    mode 0644
+    variables ({
+      boxfile: boxfile,
+      memcap: memcap
+    })
+    owner 'gonano'
+    group 'gonano'
+  end
+
+  template '/data/var/db/postgresql/pg_hba.conf' do
+    mode 0600
+    owner 'gonano'
+    group 'gonano'
+    variables ({ users: payload[:users], platform: payload[:platform] })
+  end
+
+  # Import service (and start)
+  execute "set kernel.sem values" do
+    command 'sysctl -w kernel.sem="5010 641280 5010 1024"'
+  end
+
+  directory '/etc/service/db' do
+    recursive true
+  end
+
+  directory '/etc/service/db/log' do
+    recursive true
+  end
+
+  template '/etc/service/db/log/run' do
+    mode 0755
+    source 'log-run.erb'
+    variables ({ svc: "db" })
+  end
+
+  file '/etc/service/db/run' do
+    mode 0755
+    content File.read("/opt/nanobox/hooks/files/postgresql-run")
+  end
+
+  # Configure narc
+  template '/opt/gonano/etc/narc.conf' do
+    variables ({ uid: payload[:uid], app: "nanobox", logtap: payload[:logtap_host] })
+  end
+
+  directory '/etc/service/narc'
+
+  file '/etc/service/narc/run' do
+    mode 0755
+    content File.read("/opt/gonano/hookit/mod/files/narc-run")
+  end
+
+  # Wait for server to start
+  until File.exists?( "/tmp/.s.PGSQL.5432" )
+     sleep( 1 )
+  end
+
+  # Wait for server to start
+  ensure_socket 'db' do
+    port '(4400|5432)'
+    action :listening
+  end
+
+  payload[:users].each do |user|
+    if user[:meta] and user[:meta][:privileges]
+      user[:meta][:privileges].each do |privilege|
+        if privilege[:type] == 'DATABASE'
+          execute "create #{privilege[:on]} database" do
+            command "/data/bin/psql -U gonano postgres -c 'CREATE DATABASE #{privilege[:on]};'"
+            user 'gonano'
+            not_if { `/data/bin/psql -U gonano #{privilege[:on]} -c ';' > /dev/null 2>&1`; $?.exitstatus == 0 }
+          end
+        end
+      end
+    end
+    execute "create #{user[:username]} user" do
+      command "/data/bin/psql -c \"CREATE USER #{user[:username]} ENCRYPTED PASSWORD '#{user[:password]}'\""
+      user 'gonano'
+      not_if { `/data/bin/psql -U gonano -t -c "SELECT EXISTS(SELECT usename FROM pg_catalog.pg_user WHERE usename='#{user[:username]}');"`.to_s.strip == 't' }
+    end
+    if user[:meta] and user[:meta][:privileges]
+      user[:meta][:privileges].each do |privilege|
+        case privilege[:type]
+        when "TABLE", "ALL TABLES IN SCHEMA"
+          if privilege[:type] == "TABLE" and privilege[:column]
+            if not ["SELECT", "INSERT", "UPDATE", "REFERENCES", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+              raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+            end
+          else
+            if not ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+              raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+            end
+          end
+        when "SEQUENCE", "ALL SEQUENCES IN SCHEMA"
+          if not ["USAGE", "SELECT", "UPDATE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "DATABASE"
+
+          if not ["CREATE", "CONNECT", "TEMPORARY", "TEMP", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "FOREIGN DATA WRAPPER"
+          if not ["USAGE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "FOREIGN SERVER"
+          if not ["USAGE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "FUNCTION", "ALL FUNCTIONS IN SCHEMA"
+          if not ["EXECUTE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "LANGUAGE"
+          if not ["USAGE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "LARGE OBJECT"
+          if not ["SELECT", "UPDATE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "SCHEMA"
+          if not ["CREATE", "USAGE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        when "TABLESPACE"
+          if not ["CREATE", "ALL", "ALL PRIVILEGES"].include? privilege[:privilege]
+            raise "Invalid privilege '#{privilege[:privilege]}' for type '#{privilege[:type]}'"
+          end
+        else
+          raise "Invalid privilege type: #{privilege[:type]}"
+        end
+        execute "grant #{privilege[:privilege]} to #{user[:username]} user on #{privilege[:type]} #{privilege[:on]}" do
+          command "/data/bin/psql -c \"GRANT #{privilege[:privilege]} #{privilege[:column] ? "(#{privilege[:column]})" : ""} ON #{privilege[:type]} #{privilege[:on]} TO #{user[:username]} #{privilege[:with_grant] ? "WITH GRANT OPTION" : ""}\""
+          user 'gonano'
+        end
+      end
+    end
+    if user[:meta] and user[:meta][:roles]
+      user[:meta][:roles].each do |role|
+        execute "escalate #{user[:username]} user to #{role}" do
+          command "/data/bin/psql -c 'ALTER USER #{user[:username]} WITH #{role};'"
+          user 'gonano'
+        end
+      end
+    end
+  end
+
+  boxfile[:extensions].each do |extension|
+
+    execute 'create extension' do
+      command "/data/bin/psql -c \"CREATE EXTENSION IF NOT EXISTS \\\"#{extension}\\\"\""
+      user 'gonano'
+    end
+
+  end
+end

@@ -6,7 +6,7 @@ decision_timeout=30
 # log verbosity (trace, debug, info, warn error, fatal)
 log_level=warn
 # REQUIRED - the IP:port combination of all nodes that are to be in the cluster (e.g. 'role=m.y.i.p:4400')
-<% payload[:generation][:members].map { |member| "#{member[:role]}=#{member[:local_ip]}:4400"}.each do |peer| -%>
+<% payload:[:members].map { |member| "#{member[:role]}=#{member[:local_ip]}:4400"}.each do |peer| -%>
 <%= peer %>
 <% end -%>
 # the postgresql port
