@@ -280,12 +280,10 @@ echo_lines() {
 }
 
 @test "Verify New Primary ${service_name} Data" {
-  # skip
   verify_test_data "simple-redundant-new-primary" "192.168.0.6" ${default_port} "mykey" "date"
 }
 
 @test "Verify New Secondary ${service_name} Data" {
-  # skip
   verify_test_data "simple-redundant-new-secondary" "192.168.0.6" ${default_port} "mykey" "date"
 }
 

@@ -1,6 +1,7 @@
 
 service_name="PostgreSQL"
 default_port=5432
+multi_master="false"
 
 wait_for_running() {
   container=$1
