@@ -49,8 +49,8 @@ end
 # pipe the backup into postgres client to restore from backup
 execute 'restore from backup' do
   command <<-EOF
-    bash -c 'ssh -o StrictHostKeyChecking=no #{payload[:backup][:local_ip]} \
-    "cat /data/var/db/postgresql/#{payload[:backup][:backup_id]}.gz" \
+    bash -c 'ssh -o StrictHostKeyChecking=no #{payload[:warehouse][:host]} \
+    "cat /data/var/db/postgresql/#{payload[:warehouse][:backup_id]}.gz" \
         | gunzip \
           | /data/bin/psql \
               -U gonano -p 5433 postgres

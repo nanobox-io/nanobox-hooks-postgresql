@@ -1,7 +1,7 @@
 {
-  "boxfile": {
-    "name": "database1",
-    "stability": "stable"
+  "logvac_host": "127.0.0.1",
+  "platform": "production",
+  "config": {
   },
   "member": {
     "local_ip": "192.168.0.3",
@@ -32,8 +32,5 @@
         ]
       }
     }
-  ],
-  "logtap_host": "127.0.0.1",
-  "uid": "postgresql1",
-  "platform": "production"
+  ]
 }

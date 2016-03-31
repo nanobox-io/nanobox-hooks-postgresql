@@ -10,9 +10,9 @@ require 'json'
 
 include Hooky::Postgresql
 
-boxfile = converge( BOXFILE_DEFAULTS, payload[:boxfile] )
+config = converge( CONFIG_DEFAULTS, payload[:config] )
 
-users = boxfile[:users]
+users = config[:users]
 
 plan = {
   redundant: true,

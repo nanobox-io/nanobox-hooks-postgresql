@@ -19,7 +19,7 @@ else
 end
 
 # Setup
-boxfile = converge( BOXFILE_DEFAULTS, payload[:boxfile] )
+config = converge( CONFIG_DEFAULTS, payload[:config] )
 
 if payload[:platform] != 'local'
 
@@ -86,7 +86,7 @@ end
 
 if ["primary", "secondary", "default"].include? payload[:member][:role]
   execute 'generate locale' do
-    command "locale-gen #{boxfile[:locale]} && update-locale"
+    command "locale-gen #{config[:locale]} && update-locale"
   end
 
   directory '/data/var/db/postgresql' do
@@ -118,7 +118,7 @@ if ["primary", "secondary", "default"].include? payload[:member][:role]
   template '/data/var/db/postgresql/postgresql.conf' do
     mode 0644
     variables ({
-      boxfile: boxfile,
+      config: config,
       memcap: memcap
     })
     owner 'gonano'
@@ -265,7 +265,7 @@ if ["primary", "secondary", "default"].include? payload[:member][:role]
     end
   end
 
-  boxfile[:extensions].each do |extension|
+  config[:extensions].each do |extension|
 
     execute 'create extension' do
       command "/data/bin/psql -c \"CREATE EXTENSION IF NOT EXISTS \\\"#{extension}\\\"\""

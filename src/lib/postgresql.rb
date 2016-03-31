@@ -44,7 +44,7 @@ module Hooky
       meta:          {type: :hash, template: USER_META_DEFAULTS, default: DEFAULT_META}
     }
 
-    BOXFILE_DEFAULTS = {
+    CONFIG_DEFAULTS = {
       # global settings
       before_deploy: {type: :array, of: :string, default: []},
       after_deploy:  {type: :array, of: :string, default: []},

@@ -1,14 +1,4 @@
 {
-  "boxfile": {
-    "name": "database1",
-    "stability": "stable"
-  },
-  "member": {
-    "local_ip": "192.168.0.4",
-    "uid": "3",
-    "role": "arbitrator"
-  },
-  "logtap_host": "127.0.0.1",
-  "uid": "postgresql1",
-  "platform": "production"
+  "config": {
+  }
 }
