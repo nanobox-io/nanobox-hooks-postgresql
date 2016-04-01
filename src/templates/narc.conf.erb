@@ -21,7 +21,7 @@ syslog-facility local0
 ##########
 
 # remote syslog
-remote-host <%= logtap %>
+remote-host <%= logvac %>
 remote-port 514
 remote-proto udp
 
@@ -40,7 +40,7 @@ max-open-attempts 12
 open-retry-delay 5000
 
 # identifier to prefix all messages with
-stream-id <%= app %>
+stream-id <%= uid %>
 
 # syslog facility for streams
 stream-facility user
@@ -49,5 +49,5 @@ stream-facility user
 stream-priority error
 
 # log streams
-stream <%= uid %>.postgresql[daemon] /var/log/gonano/db/current
-stream <%= uid %>.postgresql[service] /var/log/postgresql.log
+stream postgresql[daemon] /var/log/gonano/db/current
+stream postgresql[service] /var/log/postgresql.log

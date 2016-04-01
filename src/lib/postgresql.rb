@@ -48,6 +48,8 @@ module Hooky
       # global settings
       before_deploy: {type: :array, of: :string, default: []},
       after_deploy:  {type: :array, of: :string, default: []},
+      hook_ref:      {type: :string, default: "stable"},
+      # postgresql settings
       locale:        {type: :string, default: 'en_US.UTF-8'},
       extensions:    {type: :array, of: :string, default: []},
       users:         {type: :array, of: :hash, template: USER_DEFAULTS, default: DEFAULT_USERS}
