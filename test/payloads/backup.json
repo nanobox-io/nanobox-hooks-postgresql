@@ -1,0 +1,31 @@
+{
+  "strategy": "warehouse",
+  "ips": {
+    "default": "192.168.0.3"
+  },
+  "warehouse": {
+    "host": "192.168.0.9",
+    "port": 8080,
+    "token": "asdlkfjsalsdjfklsjdf",
+    "backup_id": "11258593abc"
+  },
+  "users": [
+    {
+      "username": "nanobox",
+      "password": "password",
+      "meta": {
+        "privileges": [
+          {
+            "privilege": "ALL PRIVILEGES",
+            "type": "DATABASE",
+            "on": "gonano",
+            "grant": true
+          }
+        ],
+        "roles": [
+          "SUPERUSER"
+        ]
+      }
+    }
+  ]
+}
