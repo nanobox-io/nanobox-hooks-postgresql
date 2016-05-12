@@ -165,7 +165,7 @@ if ["primary", "secondary", "default"].include? payload[:member][:role]
 
   file '/etc/service/narc/run' do
     mode 0755
-    content File.read("/opt/gonano/hookit/mod/files/narc-run")
+    content File.read("/opt/nanobox/hooks/files/narc-run")
   end
 
   # Wait for server to start
