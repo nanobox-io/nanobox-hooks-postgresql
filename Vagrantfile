@@ -43,6 +43,7 @@ Vagrant.configure(2) do |config|
     echo "Pulling the build image"
     docker pull nanobox/postgresql:9.3
     docker pull nanobox/postgresql:9.4
+    docker pull nanobox/postgresql:9.5
   SCRIPT
 
   # create an adhoc network

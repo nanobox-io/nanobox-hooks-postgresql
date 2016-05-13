@@ -12,6 +12,7 @@ all: stable
 test:
 	stdbuf -oL test/run_all.sh 9.3
 	stdbuf -oL test/run_all.sh 9.4
+	stdbuf -oL test/run_all.sh 9.5
 
 .PHONY: stable beta alpha
 
