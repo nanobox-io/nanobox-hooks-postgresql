@@ -17,6 +17,7 @@ users = config[:users]
 plan = {
   redundant: true,
   horizontal: false,
+  user: 'nanobox',
   users: users,
   ips: [:default],
   port: 6379,
