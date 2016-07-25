@@ -46,3 +46,21 @@ ensure_socket 'db' do
 port '(4400|5432)'
 action :listening
 end
+
+# Attach the IP if provided
+if payload[:ips]
+  # set up persistance
+  file "/etc/nanoinit.d/redd00" do
+    content <<-EOF
+      ifconfig redd0:0 #{payload[:ips][:default]}
+    EOF
+    mode 0755
+  end
+
+  # bring up interface
+  execute "bring up vip" do
+    command <<-EOF
+      ifconfig redd0:0 #{payload[:ips][:default]}
+    EOF
+  end
+end
