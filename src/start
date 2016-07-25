@@ -50,9 +50,9 @@ end
 # Attach the IP if provided
 if payload[:ips]
   # set up persistance
-  file "/etc/nanoinit.d/redd00" do
+  file "/etc/nanoinit.d/eth00" do
     content <<-EOF
-      ifconfig redd0:0 #{payload[:ips][:default]}
+      ifconfig eth0:0 #{payload[:ips][:default]}
     EOF
     mode 0755
   end
@@ -60,7 +60,7 @@ if payload[:ips]
   # bring up interface
   execute "bring up vip" do
     command <<-EOF
-      ifconfig redd0:0 #{payload[:ips][:default]}
+      ifconfig eth0:0 #{payload[:ips][:default]}
     EOF
   end
 end
