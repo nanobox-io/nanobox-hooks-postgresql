@@ -38,7 +38,7 @@
   "ips": [
     "default"
   ],
-  "port": 5342,
+  "port": 5432,
   "behaviors": [
     "migratable",
     "backupable"

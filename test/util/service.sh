@@ -110,7 +110,7 @@ verify_plan() {
   [ "${lines[23]}" = "  \"ips\": [" ]
   [ "${lines[24]}" = "    \"default\"" ]
   [ "${lines[25]}" = "  ]," ]
-  [ "${lines[26]}" = "  \"port\": 5342," ]
+  [ "${lines[26]}" = "  \"port\": 5432," ]
   [ "${lines[27]}" = "  \"behaviors\": [" ]
   [ "${lines[28]}" = "    \"migratable\"," ]
   [ "${lines[29]}" = "    \"backupable\"" ]
