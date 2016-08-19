@@ -8,9 +8,9 @@
 @test "simple-single-plan" {
   run run_hook "simple-single" "plan" "$(payload plan)"
   [ "$status" -eq 0 ]
-  
+
   echo "$output"
-  
+
   expected=$(cat <<-END
 {
   "redundant": true,
@@ -38,7 +38,7 @@
   "ips": [
     "default"
   ],
-  "port": 6379,
+  "port": 5342,
   "behaviors": [
     "migratable",
     "backupable"
@@ -46,7 +46,7 @@
 }
 END
 )
-  
+
   [ "$output" = "$expected" ]
 }
 

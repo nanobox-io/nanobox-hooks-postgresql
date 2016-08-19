@@ -20,7 +20,7 @@ plan = {
   user: 'nanobox',
   users: users,
   ips: [:default],
-  port: 6379,
+  port: 5342,
   behaviors: [:migratable, :backupable]
 }
 
