@@ -13,7 +13,7 @@
 
   expected=$(cat <<-END
 {
-  "redundant": true,
+  "redundant": false,
   "horizontal": false,
   "user": "nanobox",
   "users": [
