@@ -27,6 +27,10 @@ wait_for_listening() {
   do
     sleep 1
   done
+  until [ ! "$(docker exec ${container} bash -c "/data/bin/psql -U gonano -t -c 'SELECT * FROM pg_catalog.pg_tables;'")" = "psql: FATAL:  the database system is starting up" ]
+  do
+    sleep 1
+  done
 }
 
 wait_for_stop() {
