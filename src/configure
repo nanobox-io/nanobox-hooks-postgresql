@@ -156,16 +156,18 @@ if ["primary", "secondary", "default"].include? payload[:member][:role]
     content File.read("/opt/nanobox/hooks/files/postgresql-run")
   end
 
-  # Configure narc
-  template '/opt/gonano/etc/narc.conf' do
-    variables ({ uid: payload[:component][:uid], logvac: payload[:logvac_host] })
-  end
+  if payload[:logvac_host]
+    # Configure narc
+    template '/opt/gonano/etc/narc.conf' do
+      variables ({ uid: payload[:component][:uid], logvac: payload[:logvac_host] })
+    end
 
-  directory '/etc/service/narc'
+    directory '/etc/service/narc'
 
-  file '/etc/service/narc/run' do
-    mode 0755
-    content File.read("/opt/nanobox/hooks/files/narc-run")
+    file '/etc/service/narc/run' do
+      mode 0755
+      content File.read("/opt/nanobox/hooks/files/narc-run")
+    end
   end
 
   # Wait for server to start
