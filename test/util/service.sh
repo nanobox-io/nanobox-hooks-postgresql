@@ -75,6 +75,7 @@ update_test_data() {
 }
 
 verify_test_data() {
+  sleep 5
   container=$1
   ip=$2
   port=$3
