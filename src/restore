@@ -26,7 +26,7 @@ service 'db' do
 end
 
 ensure_socket 'db' do
-  port '(4400|5433)'
+  port '(5433)'
   action :listening
 end
 
@@ -81,7 +81,7 @@ service 'db' do
 end
 
 ensure_socket 'db' do
-  port '(4400|5432)'
+  port '(5432)'
   action :listening
 end
 
