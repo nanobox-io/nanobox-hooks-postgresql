@@ -209,6 +209,12 @@ echo_lines() {
   run run_hook "simple-redundant-old-secondary" "redundant-export-live" "$(payload redundant-export-live-secondary)"
   echo_lines
   [ "$status" -eq 0 ]
+
+  run docker exec "simple-redundant-new-primary" bash -c "[[ ! -d /root/data ]]"
+  [ "$status" -eq 0 ]
+
+  run docker exec "simple-redundant-new-secondary" bash -c "[[ ! -d /root/data ]]"
+  [ "$status" -eq 0 ]
 }
 
 @test "Update Old ${service_name} Data" {
@@ -238,6 +244,12 @@ echo_lines() {
   [ "$status" -eq 0 ]
   run run_hook "simple-redundant-old-secondary" "redundant-export-final" "$(payload redundant-export-final-secondary)"
   echo_lines
+  [ "$status" -eq 0 ]
+  
+  run docker exec "simple-redundant-new-primary" bash -c "[[ ! -d /root/data ]]"
+  [ "$status" -eq 0 ]
+
+  run docker exec "simple-redundant-new-secondary" bash -c "[[ ! -d /root/data ]]"
   [ "$status" -eq 0 ]
 }
 

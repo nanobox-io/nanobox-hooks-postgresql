@@ -8,11 +8,11 @@ require 'bundler/setup'
 require 'hookit/setup'
 
 # find available space
-new_member_stat = `ssh -o StrictHostKeyChecking=no #{payload[:member][:local_ip]} stat -f --format=\\\"%a %S\\\" /data/var/db/mysql`
+new_member_stat = `ssh -o StrictHostKeyChecking=no #{payload[:member][:local_ip]} stat -f --format=\\\"%a %S\\\" /data/var/db/postgresql`
 available_space = new_member_stat.split(' ')[0].to_i * new_member_stat.split(' ')[1].to_i
 
 # find needed space
-needed_space = `du -bs /data/var/db/mysql`.split(' ')[0].to_i
+needed_space = `du -bs /data/var/db/postgresql`.split(' ')[0].to_i
 
 if available_space < needed_space
   puts "Receiving side too small!!"
@@ -20,5 +20,5 @@ if available_space < needed_space
 end #unless payload[:clear_data] == "false"
 
 execute "send bulk data to new member" do
-  command "tar -cf - /data/var/db/postgresql | ssh -o StrictHostKeyChecking=no #{payload[:member][:local_ip]} tar -xpf -"
+  command "tar -cf - /data/var/db/postgresql | ssh -o StrictHostKeyChecking=no #{payload[:member][:local_ip]} tar -C / -xpf -"
 end
