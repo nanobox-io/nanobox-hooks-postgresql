@@ -81,3 +81,12 @@ EOF
     EOF
   end
 end
+
+if Dir.exist? "/opt/nanobox/cron"
+  directory '/etc/service/cron'
+
+  hook_file '/etc/service/cron/run' do
+    source 'cron'
+    mode 0755
+  end
+end
