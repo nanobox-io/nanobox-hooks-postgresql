@@ -16,7 +16,9 @@ echo_lines() {
 @test "Configure Production Container" {
   run run_hook "simple-single-production" "configure" "$(payload configure)"
   echo_lines
-  [ "$status" -eq 0 ] 
+  [ "$status" -eq 0 ]
+  run docker exec "simple-single-production" bash -c [[ -d "/opt/nanobox/cron" ]]
+  [ "$status" -eq 0 ]
 }
 
 @test "Start Production ${service_name}" {
@@ -26,6 +28,15 @@ echo_lines() {
   # Verify
   wait_for_running "simple-single-production"
   wait_for_listening "simple-single-production" "192.168.0.2" ${default_port}
+  # wait for cron jobs
+  run docker exec "simple-single-production" ps aux
+  echo_lines
+  run docker exec "simple-single-production" ls /opt/nanobox
+  echo_lines
+  sleep 60
+  run docker exec "simple-single-production" cat /tmp/test
+  echo_lines
+  [[ "$output" =~ "hi" ]]
 }
 
 @test "Insert Production ${service_name} Data" {

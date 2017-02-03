@@ -281,6 +281,12 @@ end
 
 # Add extra paths
 if payload[:extra_path_dirs] && payload[:extra_path_dirs].length > 0
+  directory "/data/etc/env.d" do
+    recursive true
+    owner 'gonano'
+    group 'gonano'
+  end
+
   file "/data/etc/env.d/EXTRA_PATHS" do
     content payload[:extra_path_dirs].join(":")
     owner 'gonano'
@@ -290,43 +296,22 @@ if payload[:extra_path_dirs] && payload[:extra_path_dirs].length > 0
 end
 
 if payload[:extra_packages]
-  logger.print(process_start("Installing user-requested packages"))
-
   execute "Install packages" do
-    command <<-EOF
-      stdbuf -o0 \
-        siphon --prefix '  ' -- \
-          bash -c "/data/bin/pkgin -y in #{payload[:extra_packages].join(' ')}"
-    EOF
-    path GONANO_PATH
+    command "/data/bin/pkgin -y in #{payload[:extra_packages].join(' ')}"
+    path "/data/sbin:/data/bin:/opt/gonano/sbin:/opt/gonano/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     user 'gonano'
-    stream true
-    on_data { |data| logger.print data }
   end
-
-  logger.print(process_end)
 end
 
 if payload[:extra_steps]
   payload[:extra_steps].each_with_index do |cmd, i|
 
-    logger.print(process_start("After build hook #{i + 1}"))
-    logger.print("   $ #{cmd}\n")
-
-    execute "After build: #{cmd}" do
-      command <<-EOF
-        stdbuf -o0 \
-          siphon --prefix '  ' -- \
-            bash -i -l -c "#{escape cmd}"
-      EOF
-      cwd CODE_DIR
-      path GONANO_PATH
+    execute "Extra Step: #{cmd}" do
+      command "bash -i -l -c \"#{escape cmd}\""
+      cwd "/data"
+      path "/data/sbin:/data/bin:/opt/gonano/sbin:/opt/gonano/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       user 'gonano'
-      stream true
-      on_data {|data| logger.print data}
     end
-
-    logger.print(process_end)
   end
 end
 
