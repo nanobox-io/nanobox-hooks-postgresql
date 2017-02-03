@@ -95,5 +95,3 @@ if Dir.exist? "/opt/nanobox/cron"
     only_if { File.exist?('/etc/service/cron/run') }
   end
 end
-
-
