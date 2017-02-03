@@ -89,4 +89,11 @@ if Dir.exist? "/opt/nanobox/cron"
     source 'cron'
     mode 0755
   end
+
+  service 'cron' do
+    action :enable
+    only_if { File.exist?('/etc/service/cron/run') }
+  end
 end
+
+

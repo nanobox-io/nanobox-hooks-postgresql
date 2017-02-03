@@ -17,7 +17,8 @@ echo_lines() {
   run run_hook "simple-single-production" "configure" "$(payload configure)"
   echo_lines
   [ "$status" -eq 0 ]
-  run docker exec "simple-single-production" bash -c [[ -d "/opt/nanobox/cron" ]]
+  run docker exec "simple-single-production" bash -c '[[ -d "/opt/nanobox/cron" ]]'
+  echo_lines
   [ "$status" -eq 0 ]
 }
 
