@@ -10,7 +10,7 @@ require 'hookit/setup'
 include Hooky::Postgresql
 
 # Setup
-converged_config = converge( Hooky::Postgresql::CONFIG_DEFAULTS, payload[:config] )
+converged_config = converge( Hooky::Postgresql::CONFIG_DEFAULTS, payload[:config] || {} )
 
 local_md5 = execute "local md5" do
   command "cat /var/nanobox/hooks.md5"
