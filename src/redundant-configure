@@ -10,7 +10,7 @@ require 'hookit/setup'
 include Hooky::Postgresql
 
 # Setup
-config = converge( CONFIG_DEFAULTS, payload[:config] )
+config = converge( CONFIG_DEFAULTS, payload[:config] || {} )
 
 template '/data/etc/yoke.ini' do
   mode 0644
