@@ -62,6 +62,7 @@ echo_lines() {
 }
 
 @test "Verify ${service_name} Data" {
+  sleep 10
   verify_test_data "backup-restore" "192.168.0.2" ${default_port} "mykey" "data"
 }
 
