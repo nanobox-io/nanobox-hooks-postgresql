@@ -201,6 +201,22 @@ if ["primary", "secondary", "default"].include? payload[:member][:role]
     action :listening
   end
 
+  begin
+    Timeout::timeout(90) do
+      execute 'try connect' do
+        command <<-EOF
+          bash -c 'while [ $(echo "show databases;" | /data/bin/psql -U gonano -p 5432 postgres 2>&1) = "psql: FATAL:  the database system is starting up" ]
+          do
+            sleep 5
+          done'
+        EOF
+      end
+    end
+  rescue Timeout::Error
+      puts 'failed to connect to PostgreSQL'
+      exit 1
+  end
+
   payload[:users].each do |user|
     if user[:meta] and user[:meta][:privileges]
       user[:meta][:privileges].each do |privilege|

@@ -87,7 +87,7 @@ execute 'restore from backup' do
 end
 
 execute 'allow db connections via yoke' do
-command <<-EOF
+  command <<-EOF
   sed -i 's/5433/5432/g' /data/etc/yoke.ini
 EOF
 end

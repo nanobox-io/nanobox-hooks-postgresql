@@ -10,7 +10,7 @@ require 'hookit/setup'
 require 'timeout'
 
 execute 'ensure no db connections' do
-command <<-EOF
+  command <<-EOF
   sed -i 's/5432/5433/g' /data/var/db/postgresql/postgresql.conf
 EOF
 end
