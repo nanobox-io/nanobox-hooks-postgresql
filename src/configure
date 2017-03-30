@@ -205,7 +205,7 @@ if ["primary", "secondary", "default"].include? payload[:member][:role]
     Timeout::timeout(90) do
       execute 'try connect' do
         command <<-EOF
-          bash -c 'while [ $(echo "show databases;" | /data/bin/psql -U gonano -p 5432 postgres 2>&1) = "psql: FATAL:  the database system is starting up" ]
+          bash -c 'while [ $(echo "SELECT * FROM pg_catalog.pg_tables;" | /data/bin/psql -U gonano -p 5432 postgres 2>&1) = "psql: FATAL:  the database system is starting up" ]
           do
             sleep 5
           done'
