@@ -7,8 +7,9 @@ require 'bundler/setup'
 # load hookit/setup to bootstrap hookit and import the dsl
 require 'hookit/setup'
 
-
 require 'timeout'
+
+include Hooky::Postgresql
 
 begin
 Timeout::timeout(90) do
@@ -53,21 +54,7 @@ ensure_socket 'db' do
   action :listening
 end
 
-begin
-  Timeout::timeout(90) do
-    execute 'try connect' do
-      command <<-EOF
-        bash -c 'while [ $(echo "SELECT * FROM pg_catalog.pg_tables;" | /data/bin/psql -U gonano -p 5433 postgres 2>&1) = "psql: FATAL:  the database system is starting up" ]
-        do
-          sleep 5
-        done'
-      EOF
-    end
-  end
-rescue Timeout::Error
-    puts 'failed to connect to PostgreSQL'
-    exit 1
-end
+check_for_ready(5433)
 
 # pipe the backup into postgres client to restore from backup
 execute 'restore from backup' do
@@ -114,18 +101,4 @@ ensure_socket 'db' do
   action :listening
 end
 
-begin
-  Timeout::timeout(90) do
-    execute 'try connect' do
-      command <<-EOF
-        bash -c 'while [ $(echo "SELECT * FROM pg_catalog.pg_tables;" | /data/bin/psql -U gonano -p 5432 postgres 2>&1) = "psql: FATAL:  the database system is starting up" ]
-        do
-          sleep 5
-        done'
-      EOF
-    end
-  end
-rescue Timeout::Error
-    puts 'failed to connect to PostgreSQL'
-    exit 1
-end
+check_for_ready()
