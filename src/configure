@@ -201,6 +201,8 @@ if ["primary", "secondary", "default"].include? payload[:member][:role]
     action :listening
   end
 
+  check_for_ready()
+
   payload[:users].each do |user|
     if user[:meta] and user[:meta][:privileges]
       user[:meta][:privileges].each do |privilege|

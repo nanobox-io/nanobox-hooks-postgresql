@@ -9,8 +9,10 @@ require 'hookit/setup'
 
 require 'timeout'
 
+include Hooky::Postgresql
+
 execute 'ensure no db connections' do
-command <<-EOF
+  command <<-EOF
   sed -i 's/5432/5433/g' /data/var/db/postgresql/postgresql.conf
 EOF
 end
@@ -18,6 +20,13 @@ end
 service 'db' do
   action :disable
   init :runit
+end
+
+begin
+  execute "kill db" do
+    command "pg_ctl stop -w -D /data/var/db/postgresql -m f"
+  end
+rescue
 end
 
 service 'db' do
@@ -30,21 +39,7 @@ ensure_socket 'db' do
   action :listening
 end
 
-begin
-  Timeout::timeout(90) do
-    execute 'try connect' do
-      command <<-EOF
-        bash -c 'while [ $(echo "show databases;" | /data/bin/psql -U gonano -p 5433 postgres 2>&1) = "psql: FATAL:  the database system is starting up" ]
-        do
-          sleep 5
-        done'
-      EOF
-    end
-  end
-rescue Timeout::Error
-  puts 'failed to connect to PostgreSQL'
-  exit 1
-end
+check_for_ready(5433)
 
 # pipe the backup into postgres client to restore from backup
 execute 'restore from backup' do
@@ -75,6 +70,13 @@ service 'db' do
   init :runit
 end
 
+begin
+  execute "kill db" do
+    command "pg_ctl stop -w -D /data/var/db/postgresql -m f"
+  end
+rescue
+end
+
 service 'db' do
   action :enable
   only_if { File.exist?('/etc/service/db/run') }
@@ -85,18 +87,4 @@ ensure_socket 'db' do
   action :listening
 end
 
-begin
-  Timeout::timeout(90) do
-    execute 'try connect' do
-      command <<-EOF
-        bash -c 'while [ $(echo "show databases;" | /data/bin/psql -U gonano -p 5432 postgres 2>&1) = "psql: FATAL:  the database system is starting up" ]
-        do
-          sleep 5
-        done'
-      EOF
-    end
-  end
-rescue Timeout::Error
-    puts 'failed to connect to PostgreSQL'
-    exit 1
-end
+check_for_ready()

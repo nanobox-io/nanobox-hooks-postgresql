@@ -7,28 +7,32 @@ require 'bundler/setup'
 # load hookit/setup to bootstrap hookit and import the dsl
 require 'hookit/setup'
 
+require 'timeout'
+
+include Hooky::Postgresql
+
 execute "set kernel.sem values" do
   command 'sysctl -w kernel.sem="5010 641280 5010 1024"'
 end
 
 # Import service (and start)
 directory '/etc/service/db' do
-recursive true
+  recursive true
 end
 
 directory '/etc/service/db/log' do
-recursive true
+  recursive true
 end
 
 template '/etc/service/db/log/run' do
-mode 0755
-source 'log-run.erb'
-variables ({ svc: "db" })
+  mode 0755
+  source 'log-run.erb'
+  variables ({ svc: "db" })
 end
 
 file '/etc/service/db/run' do
-mode 0755
-content File.read("/opt/nanobox/hooks/files/postgresql-run")
+  mode 0755
+  content File.read("/opt/nanobox/hooks/files/postgresql-run")
 end
 
 service 'db' do
@@ -43,9 +47,11 @@ end
 
 # Wait for server to start
 ensure_socket 'db' do
-port '(4400|5432)'
-action :listening
+  port '(4400|5432)'
+  action :listening
 end
+
+check_for_ready()
 
 # Attach the IP if provided
 if payload[:ips]
