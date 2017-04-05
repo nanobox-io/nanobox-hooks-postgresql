@@ -41,9 +41,10 @@ Vagrant.configure(2) do |config|
   # pull the build image to run tests in
   config.vm.provision "shell", inline: <<-SCRIPT
     echo "Pulling the build image"
-    docker pull nanobox/postgresql:9.3
-    docker pull nanobox/postgresql:9.4
-    docker pull nanobox/postgresql:9.5
+    docker pull nanobox/postgresql:9.3 || (docker pull nanobox/postgresql:9.3-beta; docker tag nanobox/postgresql:9.3-beta nanobox/postgresql:9.3)
+    docker pull nanobox/postgresql:9.4 || (docker pull nanobox/postgresql:9.4-beta; docker tag nanobox/postgresql:9.4-beta nanobox/postgresql:9.4)
+    docker pull nanobox/postgresql:9.5 || (docker pull nanobox/postgresql:9.5-beta; docker tag nanobox/postgresql:9.5-beta nanobox/postgresql:9.5)
+    docker pull nanobox/postgresql:9.6 || (docker pull nanobox/postgresql:9.6-beta; docker tag nanobox/postgresql:9.6-beta nanobox/postgresql:9.6)
   SCRIPT
 
   # create an adhoc network

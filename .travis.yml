@@ -6,6 +6,7 @@ env:
   - VERSION=9.3
   - VERSION=9.4
   - VERSION=9.5
+  - VERSION=9.6
 
 before_install:
   - sudo apt-get -y purge docker-engine
@@ -14,6 +15,6 @@ before_install:
   - docker network create --driver=bridge --subnet=192.168.0.0/16 --opt="com.docker.network.driver.mtu=1450" --opt="com.docker.network.bridge.name=redd0" nanobox
   - ifconfig
   - echo building $VERSION
-  - docker pull nanobox/postgresql:$VERSION
+  - docker pull nanobox/postgresql:$VERSION || (docker pull nanobox/postgresql:${VERSION}-beta; docker tag nanobox/postgresql:${VERSION}-beta nanobox/postgresql:${VERSION})
 
 script: sudo stdbuf -oL test/run_all.sh $VERSION
