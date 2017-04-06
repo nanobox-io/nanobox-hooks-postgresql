@@ -12,17 +12,17 @@ execute "set kernel.sem values" do
 end
 
 directory '/etc/service/db' do
-recursive true
+  recursive true
 end
 
 directory '/etc/service/db/log' do
-recursive true
+  recursive true
 end
 
 template '/etc/service/db/log/run' do
-mode 0755
-source 'log-run.erb'
-variables ({ svc: "db" })
+  mode 0755
+  source 'log-run.erb'
+  variables ({ svc: "db" })
 end
 
 # update start comand
@@ -40,6 +40,6 @@ end
 
 # Wait for server to start
 ensure_socket 'db' do
-port '4400'
-action :listening
+  port '4400'
+  action :listening
 end

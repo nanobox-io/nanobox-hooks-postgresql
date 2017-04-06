@@ -70,7 +70,7 @@ echo_lines() {
     skip "${service_name} Doesn't Support Cron"
   fi
   # wait for cron jobs
-  sleep 60
+  sleep 120
   run docker exec "simple-single-production" cat /tmp/test
   echo_lines
   [[ "$output" =~ "hi" ]]
