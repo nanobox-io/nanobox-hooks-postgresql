@@ -41,27 +41,34 @@ if payload[:platform] != 'local'
     content payload[:ssh][:admin_key][:public_key]
   end
 
-  directory '/home/gonano/.ssh' do
+  directory '/data/var/home/gonano/.ssh' do
     recursive true
     group "gonano"
     owner "gonano"
   end
 
-  file '/home/gonano/.ssh/id_rsa' do
+  file '/data/var/home/gonano/.ssh/id_rsa' do
     content payload[:ssh][:admin_key][:private_key]
     mode 0600
     group "gonano"
     owner "gonano"
   end
 
-  file '/home/gonano/.ssh/id_rsa.pub' do
+  file '/data/var/home/gonano/.ssh/id_rsa.pub' do
     content payload[:ssh][:admin_key][:public_key]
     group "gonano"
     owner "gonano"
   end
 
-  file '/home/gonano/.ssh/authorized_keys' do
+  file '/data/var/home/gonano/.ssh/authorized_keys' do
     content payload[:ssh][:admin_key][:public_key]
+    group "gonano"
+    owner "gonano"
+  end
+
+  file '/data/var/home/gonano/.pgpass' do
+    content "#{payload[:member][:local_ip]}:5432:gonano:#{payload[:users].first[:username]}:#{payload[:users].first[:password]}"
+    mode 0600
     group "gonano"
     owner "gonano"
   end
