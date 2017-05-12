@@ -11,8 +11,27 @@ require 'timeout'
 
 include Hooky::Postgresql
 
+if payload[:platform] == 'local'  
+  memcap = 128
+  user   = 'nanobox'
+else
+  total_mem = `vmstat -s | grep 'total memory' | awk '{print $1}'`.to_i
+  cgroup_mem = `cat /sys/fs/cgroup/memory/memory.limit_in_bytes`.to_i
+  memcap = [ total_mem / 1024, cgroup_mem / 1024 / 1024 ].min
+end
+  # SEMMSL maximum number of semaphores per array = at least 17
+  # SEMMNS maximum semaphores system-wide = ceil((max_connections + autovacuum_max_workers + max_worker_processes + 5) / 16) * 17
+  # SEMOPM maximum operations per semop call = SEMMSL
+  # SEMMNI maximum arrays = ceil((max_connections + autovacuum_max_workers + max_worker_processes + 5) / 16)
+
+max_connections = ((memcap / 128) * 200).ceil
+semmsl = 1024
+semopm = semmsl
+semmni = ((max_connections + 3 + `nproc`.to_i * 2 + 5 ) / 16).ceil + 20
+semmns = semmni * semmsl
+
 execute "set kernel.sem values" do
-  command 'sysctl -w kernel.sem="5010 641280 5010 1024"'
+  command "sysctl -w kernel.sem=\"#{semmsl} #{semmns} #{semopm} #{semmni}\""
 end
 
 # Import service (and start)

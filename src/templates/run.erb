@@ -16,6 +16,6 @@ if File.exist?('/data/etc/environment.d/nano-envs')
 end
 -%>
 
-sysctl -w kernel.sem="5010 641280 5010 1024"
+sysctl -w kernel.sem="<%= semmsl %> <%= semmns %> <%= semopm %> <%= semmni %>"
 
 exec su - gonano -c '<%= exec %>'

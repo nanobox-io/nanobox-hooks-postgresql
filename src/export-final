@@ -7,6 +7,12 @@ require 'bundler/setup'
 # load hookit/setup to bootstrap hookit and import the dsl
 require 'hookit/setup'
 
+# verify postgresql is stopped
+if ! `pgrep postgres`.empty?
+  puts "PostgreSQL is still running"
+  exit 1
+end
+
 execute "send diff data to new member" do
   command "rsync --delete -e 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' -a /data/var/db/postgresql/. #{payload[:member][:local_ip]}:/data/var/db/postgresql/"
 end
