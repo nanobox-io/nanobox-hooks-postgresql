@@ -50,25 +50,21 @@ verify_stopped() {
 
 insert_test_data() {
   container=$1
-  ip=$2
-  port=$3
-  key=$4
-  data=$5
-  run docker exec ${container} bash -c "/data/bin/psql -U gonano -t -c 'CREATE TABLE IF NOT EXISTS test_table (id text, value text);'"
+  key=$2
+  data=$3
+  run docker exec ${container} /data/bin/psql -U gonano -t -c "CREATE TABLE IF NOT EXISTS test_table (id text, value text);"
   echo_lines
   [ "$status" -eq 0 ]
-  run docker exec ${container} bash -c "/data/bin/psql -U gonano -t -c 'INSERT INTO test_table VALUES ('\"'\"'${key}'\"'\"', '\"'\"'${data}'\"'\"');'"
+  run docker exec ${container} /data/bin/psql -U gonano -t -c "INSERT INTO test_table VALUES ('${key}', '${data}');"
   echo_lines
   [ "$status" -eq 0 ]
 }
 
 update_test_data() {
   container=$1
-  ip=$2
-  port=$3
-  key=$4
-  data=$5
-  run docker exec ${container} bash -c "/data/bin/psql -U gonano -t -c 'UPDATE test_table SET value = '\"'\"'${data}'\"'\"' WHERE id = '\"'\"'${key}'\"'\"';'"
+  key=$2
+  data=$3
+  run docker exec ${container} /data/bin/psql -U gonano -t -c "UPDATE test_table SET value = '${data}' WHERE id = '${key}';"
   echo_lines
   [ "$status" -eq 0 ]
 
@@ -77,11 +73,9 @@ update_test_data() {
 verify_test_data() {
   sleep 5
   container=$1
-  ip=$2
-  port=$3
-  key=$4
-  data=$5
-  run docker exec ${container} bash -c "/data/bin/psql -U gonano -t -c 'SELECT value FROM test_table WHERE id = '\"'\"'${key}'\"'\"';'"
+  key=$2
+  data=$3
+  run docker exec ${container} /data/bin/psql -U gonano -t -c "SELECT value FROM test_table WHERE id = '${key}';"
   echo_lines
   count=$(echo ${lines[0]} | grep -c "$data")
   [ $count -eq 1 ]

@@ -28,8 +28,8 @@ echo_lines() {
 }
 
 @test "Insert Old ${service_name} Data" {
-  insert_test_data "simple-single-old" "192.168.0.2" ${default_port} "mykey" "data"
-  verify_test_data "simple-single-old" "192.168.0.2" ${default_port} "mykey" "data"
+  insert_test_data "simple-single-old" "mykey" "data"
+  verify_test_data "simple-single-old" "mykey" "data"
 }
 
 @test "Start New Container" {
@@ -98,8 +98,8 @@ echo_lines() {
 }
 
 @test "Update Old ${service_name} Data" {
-  update_test_data "simple-single-old" "192.168.0.2" ${default_port} "mykey" "date"
-  verify_test_data "simple-single-old" "192.168.0.2" ${default_port} "mykey" "date"
+  update_test_data "simple-single-old" "mykey" "date"
+  verify_test_data "simple-single-old" "mykey" "date"
 }
 
 @test "Stop Old ${service_name}" {
@@ -156,7 +156,7 @@ echo_lines() {
 }
 
 @test "Verify New ${service_name} Data" {
-verify_test_data "simple-single-new" "192.168.0.4" ${default_port} "mykey" "date"
+verify_test_data "simple-single-new" "mykey" "date"
 }
 
 @test "Stop Old Container" {
