@@ -18,6 +18,8 @@ end
 begin
   execute "kill db" do
     command "pg_ctl stop -w -D /data/var/db/postgresql -m f"
+    user 'gonano'
+    only_if { File.exist?('/data/var/db/postgresql/postmaster.pid') }
   end
 rescue
 end
