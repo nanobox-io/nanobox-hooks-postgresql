@@ -43,6 +43,11 @@ directory '/etc/service/db/log' do
   recursive true
 end
 
+# Import service (and start)
+directory '/etc/service/db/control' do
+  recursive true
+end
+
 template '/etc/service/db/log/run' do
   mode 0755
   source 'log-run.erb'
@@ -52,6 +57,16 @@ end
 file '/etc/service/db/run' do
   mode 0755
   content File.read("/opt/nanobox/hooks/files/postgresql-run")
+end
+
+file '/etc/service/db/control/d' do
+  mode 0755
+  content <<-EOF
+#!/bin/bash
+if [[ -f /data/var/db/postgresql/postmaster.pid ]]; then
+  su gonano -c 'pg_ctl stop -w -D /data/var/db/postgresql -m f'
+fi
+EOF
 end
 
 service 'db' do

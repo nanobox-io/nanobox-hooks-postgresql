@@ -28,15 +28,6 @@ service 'db' do
   not_if { !Dir.exist?('/etc/service/db') }
 end
 
-begin
-  execute "kill db" do
-    command "pg_ctl stop -w -D /data/var/db/postgresql -m f"
-    user 'gonano'
-    only_if { File.exist?('/data/var/db/postgresql/postmaster.pid') }
-  end
-rescue
-end
-
 directory '/etc/service/db' do
   action :delete
   not_if { !Dir.exist?('/etc/service/db') }
