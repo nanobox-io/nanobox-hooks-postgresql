@@ -12,7 +12,7 @@ payload[:members].each do |member|
   if ["primary", "secondary", "default"].include? member[:role]
 
     execute "send diff data to new member" do
-      command "rsync --delete -e 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' -a /data/var/db/postgresql/. #{member[:local_ip]}:/data/var/db/postgresql/"
+      command "rsync --delete -e 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' --exclude=/data/var/db/postgresql/postgresql.conf -exclude=/data/var/db/postgresql/pg_hba.conf -a /data/var/db/postgresql/. #{member[:local_ip]}:/data/var/db/postgresql/"
     end
 
   end
