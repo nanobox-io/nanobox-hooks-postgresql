@@ -12,7 +12,7 @@ payload[:members].each do |member|
   if ["primary", "secondary", "default"].include? member[:role]
 
     execute "send bulk data to new member" do
-      command "tar -cf - /data/var/db/postgresql | ssh -o StrictHostKeyChecking=no #{member[:local_ip]} tar -xpf -"
+      command "tar -cf - --exclude=/data/var/db/postgresql/postgresql.conf --exclude=/data/var/db/postgresql/pg_hba.conf /data/var/db/postgresql | ssh -o StrictHostKeyChecking=no #{member[:local_ip]} tar -xpf -"
     end
 
   end
