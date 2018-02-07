@@ -1,90 +1,74 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env bash
 
-# hookit is installed as a bundled app, so we need bundler to load it for us
-$:.unshift  '/opt/gonano/hookit/vendor/bundle'
-require 'bundler/setup'
+# Prevent input from being read by the wrong process(es).
+exec 6<&0 0</dev/null
 
-# load hookit/setup to bootstrap hookit and import the dsl
-require 'hookit/setup'
+IFS='.' read -r type name ignore <<< "${HOSTNAME}"
+component="$(echo "${type}_${name}" | awk '{print toupper($0)}')"
+pass="${component}_PASS"
+user="${component}_USER"
+unset type name ignore component
 
-require 'timeout'
+# Ensure there are no connections while restoring by shutting down and switching
+# ports during the restore process.
 
-include Hooky::Postgresql
+# switch ports
+sed -i 's/5432/5433/g' /data/var/db/postgresql/postgresql.conf
+# stop postgres
+sv down db
+if [[ ! ( pg_ctl stop -w -D /data/var/db/postgresql -m f ) ]]; then
+  pg_ctl stop -w -D /data/var/db/postgresql -m i
+fi
+# bring postgres back up on the temporary port
+if [[ -e /etc/service/db/run ]]; then
+  sv up db
+fi
+# ensure we can actually reach the server at the temporary port
+let count=0
+while [[ "$(netstat -an | egrep ':5433' | grep LISTEN)" = "" ]]; do
+  sleep 1
+  let count++
+  if [[ count -ge 10 ]]; then
+    exit 1
+  fi
+done
+until PGPASSWORD="${!pass}" /data/bin/psql -U ${!user} -p 5433 postgres -c "SELECT * FROM pg_catalog.pg_tables;"
+do
+  sleep 1
+done
 
-execute 'ensure no db connections' do
-  command <<-EOF
-  sed -i 's/5432/5433/g' /data/var/db/postgresql/postgresql.conf
-EOF
-end
+# Perform the actual restoration!
+PGPASSWORD="${!pass}" /data/bin/psql -U ${!user} -p 5433 postgres <&6
+result=$?
 
-service 'db' do
-  action :disable
-  init :runit
-end
+# Close the temporary file handle.
+exec 6<&-
 
-begin
-  execute "kill db" do
-    command "pg_ctl stop -w -D /data/var/db/postgresql -m f"
-  end
-rescue
-end
+# Resume normal operation.
 
-service 'db' do
-  action :enable
-  only_if { File.exist?('/etc/service/db/run') }
-end
+# switch ports
+sed -i 's/5433/5432/g' /data/var/db/postgresql/postgresql.conf
+# stop postgres
+sv down db
+if [[ ! pg_ctl stop -w -D /data/var/db/postgresql -m f ]]; then
+  pg_ctl stop -w -D /data/var/db/postgresql -m i
+fi
+# bring postgres back up on the standard port
+if [[ -e /etc/service/db/run ]]; then
+  sv up db
+fi
+# ensure we can actually reach the server at the standard port
+let count=0
+while [[ "$(netstat -an | egrep ':5432' | grep LISTEN)" = "" ]]; do
+  sleep 1
+  let count++
+  if [[ count -ge 10 ]]; then
+    exit 1
+  fi
+done
+until PGPASSWORD="${!pass}" /data/bin/psql -U ${!user} -p 5432 postgres -c "SELECT * FROM pg_catalog.pg_tables;"
+do
+  sleep 1
+done
 
-ensure_socket 'db' do
-  port '(5433)'
-  action :listening
-end
-
-check_for_ready(5433)
-
-# pipe the backup into postgres client to restore from backup
-execute 'restore from backup' do
-  command <<-EOF
-    bash -c 'ssh -o StrictHostKeyChecking=no #{payload[:warehouse][:host]} \
-    "cat /data/var/db/postgresql/#{payload[:warehouse][:backup_id]}.gz" \
-        | gunzip \
-          | /data/bin/psql \
-              -U gonano -p 5433 postgres
-    for i in ${PIPESTATUS[@]}; do
-      if [ $i -ne 0 ]; then
-        exit $i
-      fi
-    done
-    '
-  EOF
-end
-
-execute 'allow db connections' do
-  # reset port, stop database causing a restart
-  command <<-EOF
-    sed -i 's/5433/5432/g' /data/var/db/postgresql/postgresql.conf
-  EOF
-end
-
-service 'db' do
-  action :disable
-  init :runit
-end
-
-begin
-  execute "kill db" do
-    command "pg_ctl stop -w -D /data/var/db/postgresql -m f"
-  end
-rescue
-end
-
-service 'db' do
-  action :enable
-  only_if { File.exist?('/etc/service/db/run') }
-end
-
-ensure_socket 'db' do
-  port '(5432)'
-  action :listening
-end
-
-check_for_ready()
+exit $result
