@@ -11,16 +11,14 @@ before_install:
 jobs:
   include:
     - stage: test
+      env:
+        - VERSION=9.3
+        - VERSION=9.4
+        - VERSION=9.5
+        - VERSION=9.6
+        - VERSION=10
       script:
-        - sudo make test-9.3
-    - script:
-        - sudo make test-9.4
-    - script:
-        - sudo make test-9.5
-    - script:
-        - sudo make test-9.6
-    - script:
-        - sudo make test-10
+        - make test-${VERSION}
     - stage: publish
       script:
         - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
