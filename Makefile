@@ -1,7 +1,7 @@
 # -*- mode: makefile; tab-width: 8; indent-tabs-mode: 1 -*-
 # vim: ts=8 sw=8 ft=make noet
 
-VERSIONS=9.3 9.4 9.5 9.6
+VERSIONS=9.3 9.4 9.5 9.6 10
 SERVICE=postgresql
 
 default: all
@@ -22,7 +22,7 @@ test-%: nanobox/${SERVICE}-%
 .PHONY: nanobox/${SERVICE}-%
 
 nanobox/${SERVICE}-%:
-	docker pull $(subst -,:,$@) || (docker pull $(subst -,:,$@)-beta; docker tag $(subst -,:,$@)-beta $@)
+	docker pull $(subst -,:,$@) || (docker pull $(subst -,:,$@)-beta; docker tag $(subst -,:,$@)-beta $(subst -,:,$@))
 
 
 .PHONY: stable beta alpha
