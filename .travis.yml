@@ -3,17 +3,25 @@ sudo: required
 services:
   - docker
 
-env:
-  - VERSION=9.3
-  - VERSION=9.4
-  - VERSION=9.5
-  - VERSION=9.6
-
 before_install:
   - docker version
   - docker network create --driver=bridge --subnet=192.168.0.0/16 --opt="com.docker.network.driver.mtu=1450" --opt="com.docker.network.bridge.name=redd0" nanobox
   - ifconfig
-  - echo building $VERSION
-  - docker pull nanobox/postgresql:$VERSION || (docker pull nanobox/postgresql:${VERSION}-beta; docker tag nanobox/postgresql:${VERSION}-beta nanobox/postgresql:${VERSION})
 
-script: sudo stdbuf -oL test/run_all.sh $VERSION
+jobs:
+  include:
+    - stage: test
+      script:
+        - make test-9.3
+    - script:
+        - make test-9.4
+    - script:
+        - make test-9.5
+    - script:
+        - make test-9.6
+    - script:
+        - make test-10
+    - stage: publish
+      script:
+        - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+        - if [ "$BRANCH" == "master" ]; then make; fi
