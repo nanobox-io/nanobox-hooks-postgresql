@@ -71,20 +71,16 @@ module Hooky
     end
 
     def check_for_ready(port=5432)
+      count = 0
       begin
-        Timeout::timeout(90) do
-          begin
-            execute 'try connect' do
-              command "/data/bin/psql -U gonano -p #{port} postgres -c \"SELECT * FROM pg_catalog.pg_tables;\""
-            end
-          rescue Hookit::Error::UnexpectedExit
-            sleep 1
-            retry
-          end
+        execute 'try connect' do
+          command "/data/bin/psql -U gonano -p #{port} postgres -c \"SELECT * FROM pg_catalog.pg_tables;\""
+          on_exit {|exit_status| raise Hookit::Error::UnexpectedExit if exit_status != 0 }
         end
-      rescue Timeout::Error
-        puts 'failed to connect to PostgreSQL'
-        exit 1
+      rescue
+        count = count + 1
+        sleep 1
+        retry if count < 90
       end
     end
 
