@@ -8,18 +8,20 @@ before_install:
   - docker network create --driver=bridge --subnet=192.168.0.0/16 --opt="com.docker.network.driver.mtu=1450" --opt="com.docker.network.bridge.name=redd0" nanobox
   - ifconfig
 
+env:
+  - VERSION=9.3
+  - VERSION=9.4
+  - VERSION=9.5
+  - VERSION=9.6
+  - VERSION=10
+
+script:
+  - make test-${VERSION}
+
 jobs:
   include:
-    - stage: test
-      env:
-        - VERSION=9.3
-        - VERSION=9.4
-        - VERSION=9.5
-        - VERSION=9.6
-        - VERSION=10
-      script:
-        - make test-${VERSION}
     - stage: publish
+      env: VERSION=10
       script:
         - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
         - if [ "$BRANCH" == "master" ]; then make; fi
