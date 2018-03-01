@@ -1,6 +1,7 @@
 sudo: required
 
-dist: trusty
+services:
+  - docker
 
 env:
   - VERSION=9.3
@@ -9,8 +10,6 @@ env:
   - VERSION=9.6
 
 before_install:
-  - sudo apt-get -y purge docker-engine
-  - bash <(curl -fsSL https://get.docker.com/)
   - docker version
   - docker network create --driver=bridge --subnet=192.168.0.0/16 --opt="com.docker.network.driver.mtu=1450" --opt="com.docker.network.bridge.name=redd0" nanobox
   - ifconfig
