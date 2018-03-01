@@ -3,17 +3,17 @@ sudo: required
 services:
   - docker
 
-before_install:
-  - docker version
-  - docker network create --driver=bridge --subnet=192.168.0.0/16 --opt="com.docker.network.driver.mtu=1450" --opt="com.docker.network.bridge.name=redd0" nanobox
-  - ifconfig
-
 env:
   - VERSION=9.3
   - VERSION=9.4
   - VERSION=9.5
   - VERSION=9.6
   - VERSION=10
+
+before_install:
+  - docker version
+  - docker network create --driver=bridge --subnet=192.168.0.0/16 --opt="com.docker.network.driver.mtu=1450" --opt="com.docker.network.bridge.name=redd0" nanobox
+  - ifconfig
 
 script:
   - make test-${VERSION}
@@ -24,4 +24,7 @@ jobs:
       env: VERSION=10
       script:
         - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
-        - if [ "$BRANCH" == "master" ]; then make; fi
+        - 'if [ "$BRANCH" == "master" ]; 
+            then make;
+            curl -s -X POST -H "Content-Type: application/json" -H "Accept: application/json" -H "Travis-API-Version: 3" -H "Authorization: token ${TRAVIS_TOKEN}" -d "{\"request\":{\"branch\":\"master\"}}" https://api.travis-ci.org/repo/nanobox-io%2Fnanobox-docker-postgresql/requests; 
+          fi'

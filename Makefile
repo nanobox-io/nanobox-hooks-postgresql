@@ -24,7 +24,6 @@ test-%: nanobox/${SERVICE}-%
 nanobox/${SERVICE}-%:
 	docker pull $(subst -,:,$@) || (docker pull $(subst -,:,$@)-beta; docker tag $(subst -,:,$@)-beta $(subst -,:,$@))
 
-
 .PHONY: stable beta alpha
 
 stable:
