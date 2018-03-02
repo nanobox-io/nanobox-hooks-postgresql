@@ -1,6 +1,9 @@
 # -*- mode: makefile; tab-width: 8; indent-tabs-mode: 1 -*-
 # vim: ts=8 sw=8 ft=make noet
 
+VERSIONS=9.3 9.4 9.5 9.6 10
+SERVICE=postgresql
+
 default: all
 
 .PHONY: all
@@ -9,11 +12,17 @@ all: stable
 
 .PHONY: test
 
-test:
-	stdbuf -oL test/run_all.sh 9.3
-	stdbuf -oL test/run_all.sh 9.4
-	stdbuf -oL test/run_all.sh 9.5
-	stdbuf -oL test/run_all.sh 9.6
+test: $(addprefix test-,${VERSIONS})
+
+.PHONY: test-%
+
+test-%: nanobox/${SERVICE}-%
+	stdbuf -oL test/run_all.sh $(subst test-,,$@)
+
+.PHONY: nanobox/${SERVICE}-%
+
+nanobox/${SERVICE}-%:
+	docker pull $(subst -,:,$@) || (docker pull $(subst -,:,$@)-beta; docker tag $(subst -,:,$@)-beta $(subst -,:,$@))
 
 .PHONY: stable beta alpha
 
